@@ -11,7 +11,7 @@
 import axios from 'axios';
 import Config from '@/serve/env.js';
 import store from '@/store/index.js';
-import Auth from '@/utils/Auth.js';
+// import Auth from '@/utils/Auth.js';
 // import ElementUI from 'element-ui';
 
 let myHttp = axios.create({
@@ -38,19 +38,19 @@ myHttp.interceptors.request.use(function (config) {
         // 下载文件操作
         config.responseType = 'blob';
     }
-    if (config.baseURL == Config.fileUrl) {
-        delete config.headers.fjdpversion
-    }
-    // 判断是否存在token，如果存在则每个http header都加上token
-    let jwtToken = Auth.getToken();
-    if (jwtToken && !config.noToken) {
-        config.headers.Authorization = `Bearer ${jwtToken}`;
-    }
+    // if (config.baseURL == Config.fileUrl) {
+    //     delete config.headers.fjdpversion
+    // }
+    // // 判断是否存在token，如果存在则每个http header都加上token
+    // let jwtToken = Auth.getToken();
+    // if (jwtToken && !config.noToken) {
+    //     config.headers.Authorization = `Bearer ${jwtToken}`;
+    // }
     
-    //不同的token
-    if (config.tokenName) {
-        config.headers.Authorization = localStorage.getItem('tc_gl_sToken');
-    }
+    // //不同的token
+    // if (config.tokenName) {
+    //     config.headers.Authorization = localStorage.getItem('tc_gl_sToken');
+    // }
     return config;
 
 }, function (error) {
