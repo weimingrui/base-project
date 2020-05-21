@@ -253,24 +253,15 @@ AMapUtil.prototype = {
                 styleConfig.color = styleConfig.fillColor;
             }
             
-            let eventsConfig = Object.assign({}, {
-                click: null,
-                mouseover: (overlay) => {
-                },
-                mouseout: (overlay) => {
-
-                },
-                dblclick: null
-
-            }, events);
+            
             // object3d 实例对象 prism
-            let object3D = new AMap.Object3D.Prism({
-                height,
+            let prismConf = {
                 ...styleConfig,
                 ...{
                     path: aryP
                 }
-            })
+            }
+            let object3D = new AMap.Object3D.Prism()
             this._currentLayer.add(object3D);
 
             let solidObj = {
@@ -280,17 +271,7 @@ AMapUtil.prototype = {
 
             this._3DLayerList.push(solidObj);
 
-            let keys = Object.keys(eventsConfig);
-            //绑定事件
-
-            keys.forEach(keyName => {
-                let event = eventsConfig[keyName];
-                if (event) {
-                    object3D.on(keyName, (e) => {
-                        eventsConfig[keyName](object3D, styleConfig, e)
-                    });
-                }
-            });
+            this.addEventListen(object3D, events, prismConf);
             return {
                 item: object3D,
                 config: styleConfig,
@@ -421,16 +402,77 @@ AMapUtil.prototype = {
             fillOpacity:0.05
         }
         defaultConf = Object.assign(defaultConf,config); 
+        let {events = {}} = defaultConf
         let circleLayer = new AMap.Circle({
             map:this_map,
             ...defaultConf,
         });
+        this.addEventListen(circleLayer, events, defaultConf);
         let obj = {
             type: 'circle',
             item: circleLayer,
         }
         this._NormalLayerList.push(obj);
-    }
+    },
+    addEventListen(layer, events = {},otherData = {}) {
+        if (layer) {
+            let eventsConfig = Object.assign({}, {
+                click: null,
+                mouseover: (overlay) => {
+                },
+                mouseout: (overlay) => {
+    
+                },
+                dblclick: null
+    
+            }, events);
+            let keys = Object.keys(eventsConfig);
+            //绑定事件
+    
+            keys.forEach(keyName => {
+                let event = eventsConfig[keyName];
+                if (event) {
+                    layer.on(keyName, (e) => {
+                        eventsConfig[keyName](layer, otherData, e)
+                    });
+                }
+            });
+        }
+    },
+    /**
+     * @description: 富文本集合
+     * @param {type} 
+     * @return: 
+     */
+    drawRichMarker(config={}) {
+        let {
+            html = '<div></div>',
+            position,
+            offset = [0,0],
+            
+            events = {},
+            type = 'richMarker'
+        } = config;
+        if (offset) {
+
+        }
+        var marker = new AMap.Marker({
+            position: [...position],
+            // 将 html 传给 content
+            content: html,
+            // 以 icon 的 [center bottom] 为原点
+            offset: new AMap.Pixel(...offset),
+        });
+        this.addEventListen(marker,events, config);
+        // 将 markers 添加到地图
+        this._map.add(marker);
+        let markerObj = {
+            item: marker,
+            type,
+        }
+        this._NormalLayerList.push(markerObj);
+        return markerObj;
+    },
 }
 
 export default AMapUtil;
