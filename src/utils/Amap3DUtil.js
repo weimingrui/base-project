@@ -68,6 +68,7 @@ AMapUtil.prototype = {
     createMap(el, config = {}) {
         let pitch = this.defaultPitch;
         let defaultConfig = {
+            // rotateEnable:false, 固定视角
             pitch, // 地图俯仰角度，有效范围 0 度- 83 度
             center: [113.61161515108, 34.747428567948], //设置地图中心点坐标
             mapStyle: 'amap://styles/whitesmoke', //设置地图的显示样式
@@ -82,9 +83,6 @@ AMapUtil.prototype = {
 
         this._map = new AMap.Map(el, cfg);
         this.create3DLayerContain();
-        if (cfg.traffic) {
-            this.doTraffic();
-        }
 
     },
     /**
@@ -105,6 +103,7 @@ AMapUtil.prototype = {
         this._3DLayerContainList.push(layerObj);
         this._currentLayer = object3Dlayer;
         this._3DLayerList = layerObj.prismList;
+        this._NormalLayerList = []; //不挂在3DObject上的layers
         return layerObj;
     },
     /**
@@ -112,15 +111,15 @@ AMapUtil.prototype = {
      * @param {type} 
      * @return: 
      */
-    setCurrent3DLayerContain(creatTime) {
+    setCurrent3DLayerContain(layer) {
         if (this._3DLayerContainList.length  > 0) {
-            let curLayer = this._3DLayerContainList.find(item=>{
-                return item.creatTime == creatTime;
-            });
-            if (curLayer) {
-                this._currentLayer = curLayer._3DLayer;
+            // let curLayer = this._3DLayerContainList.find(_layer=>{
+            //     return item._3DLayer == layer;
+            // });
+            if (layer) {
+                this._currentLayer = layer._3DLayer;
                 this._3DLayerList = this._currentLayer.prismList;
-                return curLayer
+                return layer
             }
         } else {
             return this.create3DLayerContain();
@@ -131,9 +130,9 @@ AMapUtil.prototype = {
      * @param {type} 
      * @return: 
      */
-    remove3DLayerContain(creatTime){
+    remove3DLayerContain(layer){
         this._3DLayerContainList.forEach((_layer, index) => {
-            if (_layer == creatTime) {
+            if (_layer == layer) {
                 this._map.remove(_layer['_3DLayer']);
                 this._3DLayerContainList.splice(index, 1);
             }
@@ -227,16 +226,15 @@ AMapUtil.prototype = {
 
     /**
      * 
-     * @param {_MAP} map 
+     * @param {_MAP} map 画立体物体
      * @param {string} boundary :'1223.2,32323.2;133232.4,3432432.6;'
      * @param {*Object} param2 选填  {styles:{...}||events:{...} }
      */
-    drawPolygon(boundary, {
+    draw3DSolid(boundary, {
         styles,
         events,
-        type = "polygon"
-    } = {}, map = this._map, ) {
-        // console.log('map',map);
+        type = "solid"
+    } = {}, ) {
         if (!boundary) return;
 
         let draw = (aryP) => {
@@ -258,17 +256,9 @@ AMapUtil.prototype = {
             let eventsConfig = Object.assign({}, {
                 click: null,
                 mouseover: (overlay) => {
-                    // overlay.setOptions({
-                    //     ...styleConfig,
-                    //     ...{
-                    //         fillOpacity: 0.8
-                    //     }
-                    // });
                 },
                 mouseout: (overlay) => {
-                    // overlay.setOptions({
-                    //     ...styleConfig,
-                    // });
+
                 },
                 dblclick: null
 
@@ -281,12 +271,14 @@ AMapUtil.prototype = {
                     path: aryP
                 }
             })
-            let polygonObj = {
+            this._currentLayer.add(object3D);
+
+            let solidObj = {
                 type: type,
                 item: object3D
             };
 
-            this._3DLayerList.push(polygonObj);
+            this._3DLayerList.push(solidObj);
 
             let keys = Object.keys(eventsConfig);
             //绑定事件
@@ -294,16 +286,13 @@ AMapUtil.prototype = {
             keys.forEach(keyName => {
                 let event = eventsConfig[keyName];
                 if (event) {
-                    polygonObj.item.on(keyName, (e) => {
-                        eventsConfig[keyName](polygonObj.item, styleConfig, e)
+                    object3D.on(keyName, (e) => {
+                        eventsConfig[keyName](object3D, styleConfig, e)
                     });
                 }
             });
-
-            this._currentLayer.add(polygonObj.item);
-
             return {
-                item: polygonObj.item,
+                item: object3D,
                 config: styleConfig,
                 point: aryP,
             };
@@ -351,47 +340,97 @@ AMapUtil.prototype = {
         return result;
     },
 
-    //交通
-    //实时路况图层
-    doTraffic() {
-        let defaultConfig = {
-            zIndex: 9999,
-            'autoRefresh': true, //是否自动刷新，默认为false
-            'interval': 10,
-        };
-        setTimeout(() => {
-            var trafficLayer = new AMap.TileLayer.Traffic(defaultConfig);
-            trafficLayer.setMap(this._map);
-        }, 200)
-
-    },
-
     //根据类型获取overlays
     /**
      * 
      * @param {*} type 'richMark|mark|polygon|stationPoint_richMark|station_richMark(地铁首末)|metro_polyline(地铁线)'
      */
-    getOverlaysByType(type) {
+    getOverlaysByType(type, conf = {is3D = false}) {
         let overLays = [];
-        this._3DLayerList.forEach((_overLay, index) => {
-            if (_overLay.type == type) {
-                overLays.push(_overLay);
-            }
-        });
+        if (conf&&conf.is3D) {
+            this._3DLayerList.forEach((_overLay, index) => {
+                if (_overLay.type == type) {
+                    overLays.push(_overLay);
+                }
+            });
+        } else {
+            this._NormalLayerList.forEach((_overLay, index) => {
+                if (_overLay.type == type) {
+                    overLays.push(_overLay);
+                }
+            });
+        }
+
+        
         return overLays;
     },
 
     //清除所有overlays
     clearAllOverlays() {
+        this._NormalLayerList.forEach(_overLay=>{
+            if (this._map && _overLay){
+                this._map.remove(_overLay.item);
+            }
+        })
         this._3DLayerContainList.forEach(_overLay => {
             if (this._map && _overLay && _overLay._3DLayer) {
                 this._map.remove(_overLay._3DLayer);
             }
         });
+        this._NormalLayerList = [];
         this._3DLayerContainList = [];
         this._currentLayer = null;
         this._3DLayerList = [];
     },
+    drawTextLabel(config={}) {
+        let defaultConf = {
+            text:'',
+            verticalAlign:'bottom',
+            position: [116.47286,39.992178],
+            height: 10,
+            style:{
+                'background-color':'#e1e1e1',
+                'border-color':'white',
+                'font-size':'12px'
+            }
+        }
+        defaultConf = Object.assign(defaultConf,config)
+        let textLayer  = new AMap.Text({
+            map:this._map,
+            ...defaultConf
+        })
+        let obj = {
+            type: 'text',
+            item: textLayer,
+        }
+        this._NormalLayerList.push(obj);
+    },
+    
+    /**
+     * @description: 画圆
+     * @param {type} 
+     * @return: 
+     */
+    drawCircle(config = {}) {
+        let defaultConf = {
+            center:[116.47246,39.992133],
+            radius:300,
+            fillColor:'blue',
+            strokeWeight: 0,
+            strokeColor:'white',
+            fillOpacity:0.05
+        }
+        defaultConf = Object.assign(defaultConf,config); 
+        let circleLayer = new AMap.Circle({
+            map:this_map,
+            ...defaultConf,
+        });
+        let obj = {
+            type: 'circle',
+            item: circleLayer,
+        }
+        this._NormalLayerList.push(obj);
+    }
 }
 
 export default AMapUtil;
