@@ -1,0 +1,14 @@
+{
+  "source": {
+    "include": ["src/"],
+    "includePattern": "\\.(vue|js)$"
+  },
+  "plugins": ["node_modules/jsdoc-vuejs"],
+  "opts": {
+    "template": "node_modules/docdash",
+    "encoding": "utf8",
+    "destination": "./docs/",
+    "recurse": true,
+    "verbose": true
+  }
+}
