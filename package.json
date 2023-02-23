@@ -12,6 +12,7 @@
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "core-js": "^3.6.4",
+    "crypto": "^1.0.1",
     "node-sass": "^4.9.4",
     "sass-loader": "^7.1.0",
     "vue": "^2.6.11",
