@@ -1,10 +1,4 @@
-/*
- * @Author: hp 高德地图工具分装
- * @Date: 2019-10-22 09:12:05
- * @Last Modified by: hp
- * @Last Modified time: 2019-10-25 16:48:15
- */
-
+/* eslint-disable prettier/prettier */
 const KEY = 'ea0f1aa1d5ac2376b33df517a344d3cd'
 
 const AMapUtil = function (Amap = window.Amap) {
@@ -194,62 +188,62 @@ AMapUtil.prototype = {
                 styles
             )
 
-            let eventsConfig = Object.assign(
-                {},
-                {
-                    click: null,
-                    mouseover: (overlay) => {
-                        overlay.setOptions({
-                            ...styleConfig,
-                            ...{
-                                fillOpacity: 0.8
-                            }
-                        })
-                    },
-                    mouseout: (overlay) => {
-                        overlay.setOptions({
-                            ...styleConfig
-                        })
-                    },
-                    dblclick: null
-                },
-                events
-            )
+          let eventsConfig = Object.assign(
+              {},
+              {
+                  click: null,
+                  mouseover: (overlay) => {
+                      overlay.setOptions({
+                          ...styleConfig,
+                          ...{
+                              fillOpacity: 0.8
+                          }
+                      })
+                  },
+                  mouseout: (overlay) => {
+                      overlay.setOptions({
+                          ...styleConfig
+                      })
+                  },
+                  dblclick: null
+              },
+              events
+          )
 
-            let polygonObj = {
-                type: type,
-                item: new AMap.Polygon({
-                    ...styleConfig,
-                    ...{
-                        path: aryP
-                    }
-                })
+          let polygonObj = {
+              type: type,
+              item: new AMap.Polygon({
+                  ...styleConfig,
+                  ...{
+                      path: aryP
+                  }
+              })
 
-                // new BMap.Polygon(aryP, styleConfig),
-            }
-
-            this._overlays.push(polygonObj)
-
-            let keys = Object.keys(eventsConfig)
-            //绑定事件
-
-            keys.forEach((keyName) => {
-                let event = eventsConfig[keyName]
-                if (event) {
-                    polygonObj.item.on(keyName, (e) => {
-                        eventsConfig[keyName](polygonObj.item, styleConfig, e)
-                    })
-                }
-            })
-
-            map.add(polygonObj.item)
-
-            return {
-                item: polygonObj.item,
-                config: styleConfig,
-                point: aryP
-            }
+            // new BMap.Polygon(aryP, styleConfig),
         }
+
+          this._overlays.push(polygonObj)
+
+          let keys = Object.keys(eventsConfig)
+      //绑定事件
+
+          keys.forEach((keyName) => {
+              let event = eventsConfig[keyName]
+              if (event) {
+                  polygonObj.item.on(keyName, (e) => {
+                      eventsConfig[keyName](polygonObj.item, styleConfig, e)
+                  })
+              }
+          })
+
+          map.add(polygonObj.item)
+
+          return {
+              item: polygonObj.item,
+              config: styleConfig,
+              point: aryP
+          }
+      }
 
         if (Array.isArray(boundary)) {
             let list = []
@@ -331,9 +325,9 @@ AMapUtil.prototype = {
     drawpanelLine(item, el) {
         let that = $(el)
         let pixel = this.lnglat2container(item.position)
-        // console.log( that.position().left);
-        // that.options.linex = that.options.linex == 0 ? parseFloat(that.width()) / 2 : that.options.linex;
-        // that.options.liney = that.options.liney == 0 ? (parseFloat(that.height()) / 2) + 6 : that.options.liney;
+    // console.log( that.position().left);
+    // that.options.linex = that.options.linex == 0 ? parseFloat(that.width()) / 2 : that.options.linex;
+    // that.options.liney = that.options.liney == 0 ? (parseFloat(that.height()) / 2) + 6 : that.options.liney;
 
         // marker 相对屏幕的绝对位置 xy
         let x = pixel.x - that.width() / 2 + 134
@@ -360,8 +354,8 @@ AMapUtil.prototype = {
             that.find('.u-panelineb').css('bottom', '0')
         }
     },
-    //交通
-    //实时路况图层
+  //交通
+  //实时路况图层
 
     doTraffic() {
         let defaultConfig = {
